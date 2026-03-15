@@ -118,17 +118,19 @@ This installs `uv` (user-local, no root needed), creates a global `base` environ
 | ML | scikit-learn, xgboost, lightgbm |
 | Utilities | requests, httpx, pydantic, sqlalchemy, orjson, jinja2, pyyaml, python-dotenv |
 
-It also installs conda-style shell functions (`uv-functions.bash`) into `.bashrc`:
+It also installs `uvenv`, a single conda-style command with tab completion:
 
 ```bash
-use_uv [name]        # activate local .venv or named global env
-create_uv <name>     # create a new global env (optional python ver & packages)
-list_uv              # list all global environments
-remove_uv <name>     # delete a global environment
-activate_uv <name>   # activate a named global environment
+uvenv use [name]                    # activate local .venv or named global env
+uvenv create <name> [pyver] [pkgs]  # create a new global env
+uvenv ls                            # list global environments (with * for active)
+uvenv rm <name>                     # remove a global environment
+uvenv help                          # show help
 ```
 
 Global environments live in `~/.uv-envs/` (configurable via `UV_ENV_HOME`). The `base` environment auto-activates on login.
+
+**Two modes, one tool**: Use `uv` directly for project-local work (pyproject.toml, .venv per project). Use `uvenv` for shared/global environments (data science, teaching, etc.). `uvenv use` checks for a local `.venv` first, so they coexist naturally.
 
 Everything stays in the user's home directory — no system Python is touched.
 

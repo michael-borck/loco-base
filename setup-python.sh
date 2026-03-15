@@ -103,8 +103,8 @@ ENV_DIR="$UV_ENV_HOME/$ENV_NAME"
 if [ -d "$ENV_DIR" ]; then
     warn "Environment '${ENV_NAME}' already exists — reinstalling packages"
 else
-    ensure_uv_home
-    uv venv -p "python${PYTHON_VERSION}" -- "$ENV_DIR"
+    mkdir -p "$UV_ENV_HOME"
+    uv venv -p "python${PYTHON_VERSION}" "$ENV_DIR"
     ok "Created environment '${ENV_NAME}'"
 fi
 
@@ -204,7 +204,7 @@ cat >> "$BASHRC" <<EOF
 
 ${ACTIVATE_MARKER_START}
 # Auto-activate the '${ENV_NAME}' global Python environment
-use_uv ${ENV_NAME} 2>/dev/null
+uvenv use ${ENV_NAME} 2>/dev/null
 ${ACTIVATE_MARKER_END}
 EOF
 ok "Auto-activation of '${ENV_NAME}' added to .bashrc"
@@ -218,11 +218,11 @@ echo "  Env home:     ${UV_ENV_HOME}"
 echo ""
 echo "  Shell functions available after: source ~/.bashrc"
 echo ""
-echo "    use_uv [name]    — activate local .venv or named global env"
-echo "    create_uv <name> [pyver] [packages...] — create a new global env"
-echo "    list_uv          — list all global environments"
-echo "    remove_uv <name> — delete a global environment"
-echo "    activate_uv <name> — activate a named global environment"
+echo "    uvenv use [name]                    activate local .venv or named global env"
+echo "    uvenv create <name> [pyver] [pkgs]  create a new global env"
+echo "    uvenv ls                            list all global environments"
+echo "    uvenv rm <name>                     remove a global environment"
+echo "    uvenv help                          show help"
 echo ""
 echo "  Installed package groups:"
 echo "    Dev:   ruff, mypy, basedpyright, pytest, twine, build, ipython, pre-commit"
