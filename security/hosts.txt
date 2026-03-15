@@ -1,0 +1,7 @@
+# Lab machines — one hostname or IP per line
+# Used by audit-remote.sh
+# Example:
+# 192.168.20.119
+# 192.168.20.120
+# hormiga
+# cerebro
