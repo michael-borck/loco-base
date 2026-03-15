@@ -98,6 +98,40 @@ sudo -E bash install.sh     # re-applies everything cleanly
 
 It will **never** touch: SSH, kernel, networking, sudo, apt, or systemd itself.
 
+## Python development setup (optional)
+
+Not all machines need Python. Run this separately after `install.sh`:
+
+```bash
+bash setup-python.sh                    # defaults: Python 3.13, env name "base"
+bash setup-python.sh --python 3.12      # specific Python version
+bash setup-python.sh --env-name ml      # custom environment name
+```
+
+This installs `uv` (user-local, no root needed), creates a global `base` environment, and installs a full modern Python stack:
+
+| Group | Packages |
+|-------|----------|
+| Dev tools | ruff, mypy, basedpyright, pytest, pytest-cov, pytest-xdist, twine, build, ipython, pre-commit |
+| TUI | textual, rich, click, typer, tqdm, prompt-toolkit |
+| Data | numpy, pandas, polars, matplotlib, seaborn, scipy |
+| ML | scikit-learn, xgboost, lightgbm |
+| Utilities | requests, httpx, pydantic, sqlalchemy, orjson, jinja2, pyyaml, python-dotenv |
+
+It also installs conda-style shell functions (`uv-functions.bash`) into `.bashrc`:
+
+```bash
+use_uv [name]        # activate local .venv or named global env
+create_uv <name>     # create a new global env (optional python ver & packages)
+list_uv              # list all global environments
+remove_uv <name>     # delete a global environment
+activate_uv <name>   # activate a named global environment
+```
+
+Global environments live in `~/.uv-envs/` (configurable via `UV_ENV_HOME`). The `base` environment auto-activates on login.
+
+Everything stays in the user's home directory — no system Python is touched.
+
 ## Toggle scripts
 
 Convenience scripts for toggling settings on and off:
@@ -169,6 +203,8 @@ machine-setup/
 ├── config.env              # Per-machine configuration
 ├── install.sh              # Main installer (run with sudo -E)
 ├── reset.sh                # Strip to minimal server state
+├── setup-python.sh         # Python dev environment (optional, no root needed)
+├── uv-functions.bash       # Conda-style shell functions for uv
 ├── verify.sh               # Post-install verification
 ├── toggle-autologin.sh     # Toggle TTY autologin on/off
 ├── toggle-nopasswd.sh      # Toggle NOPASSWD sudo on/off
