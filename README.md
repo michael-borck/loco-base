@@ -211,18 +211,39 @@ machine-setup/
 ├── toggle-autologin.sh     # Toggle TTY autologin on/off
 ├── toggle-nopasswd.sh      # Toggle NOPASSWD sudo on/off
 ├── README.md
-└── scripts/
-    ├── 01-packages.sh
-    ├── 02-nvidia.sh
-    ├── 03-plymouth.sh
-    ├── 04-motd.sh
-    ├── 05-grub.sh
-    ├── 06-autologin.sh
-    ├── 07-dashboard.sh
-    ├── 08-prompt.sh
-    ├── 09-harden.sh
-    └── pane-runner.sh      # Helper for dashboard pane rotation
+├── HARDENING.md           # Security posture documentation
+├── scripts/
+│   ├── 01-packages.sh
+│   ├── 02-nvidia.sh
+│   ├── 03-plymouth.sh
+│   ├── 04-motd.sh
+│   ├── 05-grub.sh
+│   ├── 06-autologin.sh
+│   ├── 07-dashboard.sh
+│   ├── 08-prompt.sh
+│   ├── 09-harden.sh
+│   └── pane-runner.sh      # Helper for dashboard pane rotation
+└── security/
+    ├── audit-local.sh       # Local security audit + drift detection
+    ├── audit-remote.sh      # Remote nmap port scanning
+    ├── setup-cron.sh        # Install automated audit cron jobs
+    └── hosts.txt            # Lab machine list for remote scans
 ```
+
+## Security auditing
+
+The `security/` folder contains standalone audit scripts — run these after setup to monitor machine health:
+
+| Script | Description |
+|--------|-------------|
+| `audit-local.sh` | Runs Lynis + custom hardening checks (UFW, fail2ban, NOPASSWD, open ports, AppArmor, drift detection). Usage: `sudo ./security/audit-local.sh` |
+| `audit-remote.sh` | Scans lab machines externally with nmap. Usage: `./security/audit-remote.sh [host1 host2 ...]` or reads from `hosts.txt` |
+| `setup-cron.sh` | Installs cron jobs for automated auditing (daily local, weekly remote, weekly Lynis). Usage: `sudo ./security/setup-cron.sh` |
+| `hosts.txt` | List of lab machine hostnames/IPs for remote scanning (one per line) |
+
+`audit-local.sh` supports `--cron` mode for quiet output (only warnings/failures). On first run it saves a baseline; subsequent runs detect drift.
+
+See [HARDENING.md](HARDENING.md) for a full write-up of the security posture.
 
 ## Notes
 
