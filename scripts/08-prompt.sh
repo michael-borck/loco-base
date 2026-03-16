@@ -12,10 +12,10 @@ COLOR="${PROMPT_COLOR:-1;36m}"
 EMOJI="${PROMPT_EMOJI:-🖥️}"
 NAME="${MACHINE_NAME,,}"
 
-MARKER_START="# >>> machine-setup prompt >>>"
-MARKER_END="# <<< machine-setup prompt <<<"
+MARKER_START="# >>> loco-base prompt >>>"
+MARKER_END="# <<< loco-base prompt <<<"
 
-# Remove any previous machine-setup prompt block (marker-based)
+# Remove any previous loco-base prompt block (marker-based)
 if grep -q "$MARKER_START" "$BASHRC" 2>/dev/null; then
     sed -i "/${MARKER_START}/,/${MARKER_END}/d" "$BASHRC"
 fi

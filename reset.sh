@@ -4,7 +4,7 @@
 # Usage: sudo -E bash reset.sh
 #
 # This aggressively removes desktop environments, snaps, flatpak,
-# unnecessary services, and any previous machine-setup artifacts,
+# unnecessary services, and any previous loco-base artifacts,
 # leaving a clean minimal server ready for install.sh.
 #
 # Safe: never touches SSH, kernel, networking, sudo, or apt itself.
@@ -68,7 +68,7 @@ fi
 # ══════════════════════════════════════════════
 # Phase 1: Remove our own artifacts
 # ══════════════════════════════════════════════
-step "Phase 1: Remove machine-setup artifacts"
+step "Phase 1: Remove loco-base artifacts"
 
 # Plymouth theme
 if [ -d "/usr/share/plymouth/themes/${THEME_NAME}" ]; then
@@ -81,11 +81,20 @@ else
 fi
 
 # Custom MOTD — remove ours, re-enable defaults
-if [ -f "/etc/update-motd.d/01-${THEME_NAME}" ]; then
-    rm -f "/etc/update-motd.d/01-${THEME_NAME}"
-    ok "Removed custom MOTD script"
+REMOVED_MOTD=false
+for f in /etc/update-motd.d/01-*; do
+    [ -f "$f" ] && rm -f "$f" && REMOVED_MOTD=true
+done
+if [ "$REMOVED_MOTD" = true ]; then
+    ok "Removed custom MOTD script(s)"
 else
     skip "Custom MOTD"
+fi
+
+# MOTD art directory
+if [ -d "/etc/motd-art" ]; then
+    rm -rf /etc/motd-art
+    ok "Removed /etc/motd-art"
 fi
 for f in /etc/update-motd.d/{00-header,10-help-text,50-motd-news,60-unminimize,91-release-upgrade,92-unattended-upgrades}; do
     [ -f "$f" ] && chmod +x "$f"
@@ -120,7 +129,7 @@ fi
 BASHRC="${USER_HOME}/.bashrc"
 if [ -f "$BASHRC" ]; then
     # Remove marker-based block if present
-    sed -i '/^# >>> machine-setup prompt >>>/,/^# <<< machine-setup prompt <<</d' "$BASHRC" 2>/dev/null
+    sed -i '/^# >>> loco-base prompt >>>/,/^# <<< loco-base prompt <<</d' "$BASHRC" 2>/dev/null
     # Remove legacy (non-marker) prompt lines
     sed -i '/__git_branch/d' "$BASHRC" 2>/dev/null
     sed -i '/┌.*::.*git_branch/d' "$BASHRC" 2>/dev/null
@@ -275,7 +284,7 @@ done
 # ══════════════════════════════════════════════
 # Phase 6: Remove packages installed by our scripts
 # ══════════════════════════════════════════════
-step "Phase 6: Remove machine-setup packages"
+step "Phase 6: Remove loco-base packages"
 
 OUR_PACKAGES=(
     tmux figlet toilet toilet-fonts
@@ -295,7 +304,7 @@ done
 
 if [ ${#INSTALLED_OURS[@]} -gt 0 ]; then
     apt-get purge -y "${INSTALLED_OURS[@]}" 2>&1 | tail -5
-    ok "Removed ${#INSTALLED_OURS[@]} machine-setup packages"
+    ok "Removed ${#INSTALLED_OURS[@]} loco-base packages"
 else
     skip "Machine-setup packages already removed"
 fi

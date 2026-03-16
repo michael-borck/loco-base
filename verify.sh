@@ -11,6 +11,13 @@ TTY="${AUTOLOGIN_TTY:-tty1}"
 echo "=== ${MACHINE_NAME} Post-Install Checklist ==="
 echo ""
 
+# Machine identity
+if [ -n "$MACHINE_NAME" ]; then
+    echo -e "  $PASS Machine: ${MACHINE_NAME} ${PROMPT_EMOJI}"
+else
+    echo -e "  $FAIL No machine name set (run install.sh to select)"
+fi
+
 # Plymouth
 if [ -f "/usr/share/plymouth/themes/${THEME_NAME}/${THEME_NAME}.plymouth" ]; then
     echo -e "  $PASS Plymouth theme '${THEME_NAME}' installed"
@@ -41,6 +48,14 @@ if command -v nvidia-smi &>/dev/null; then
     fi
 else
     echo -e "  $FAIL nvidia-smi not found"
+fi
+
+# MOTD art
+ART_COUNT=$(find /etc/motd-art -name '*.txt' -type f 2>/dev/null | wc -l)
+if [ "$ART_COUNT" -gt 0 ]; then
+    echo -e "  $PASS MOTD art: ${ART_COUNT} files in /etc/motd-art/"
+else
+    echo -e "  $FAIL No MOTD art in /etc/motd-art/"
 fi
 
 # MOTD

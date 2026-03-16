@@ -202,7 +202,7 @@ Security hardening is not a one-time activity. The lab uses a tiered monitoring 
 
 ### Tier 1 — Automated auditing (current)
 
-Lightweight, script-based monitoring that runs on each machine with no additional infrastructure. Located in `machine-setup/security/`.
+Lightweight, script-based monitoring that runs on each machine with no additional infrastructure. Located in `loco-base/security/`.
 
 **Local audit** (`audit-local.sh`):
 - Runs 12 custom hardening checks: firewall state, fail2ban, NOPASSWD sudo, root account, SSH config, autologin, listening ports, world-writable files, kernel hardening (ASLR, SYN cookies)

@@ -1,102 +1,120 @@
-# Machine Setup
+# LocoBase
 
-Automated setup kit for Ubuntu 22.04 LTS workstations. Installs a branded boot splash, MOTD with ASCII art, tmux dashboard on autologin TTY, custom bash prompt, and basic hardening.
+Core setup kit for the LocoLab Ubuntu 22.04 LTS workstations. Installs NVIDIA drivers, CUDA toolkit, Ollama, Docker, branded boot splash, MOTD with ASCII art, tmux dashboard, custom bash prompt, and security hardening.
 
-All scripts are **idempotent** — re-running `install.sh` will fix drift, install anything missing, and skip what's already correct. A separate `reset.sh` can strip a machine back to minimal server state for a clean start.
+All scripts are **idempotent** — re-running fixes drift, installs anything missing, and skips what's already correct. A separate `reset.sh` can strip a machine back to minimal server state for a clean start.
+
+This is the **foundation layer** — individual loco-* projects (loco-bench, loco-llm, loco-convoy, loco-ensayo) have their own setup scripts that build on top of this base.
+
+## Quick start (fresh install)
+
+```bash
+# 1. Install Ubuntu 22.04 LTS (minimised server)
+# 2. Log in and run:
+sudo apt install git
+git clone https://github.com/<your-user>/loco-base.git
+cd loco-base
+sudo -E bash install.sh
+```
+
+The installer is menu-driven — it will:
+1. Ask you to select a machine name (or enter a custom one)
+2. Show the main workflow menu (Fresh Install, Fix Drift, Reset, Post-Install, Individual Script)
+3. Run everything with sensible defaults — no config file editing required
+
+After install, reboot and verify:
+```bash
+sudo reboot
+# after reboot:
+bash ~/loco-base/verify.sh
+```
+
+## Lab machines
+
+| Machine | Name (Spanish) | Emoji | Role |
+|---------|---------------|-------|------|
+| cerebro | brain | 🧠 | Education platform (RTX 2060 Super 8GB) |
+| colmena | beehive | 🐝 | Benchmarking + multi-GPU + fine-tuning (8-GPU chassis) |
+| hormiga | ant | 🐜 | Reference floor node (GTX 1050 Ti 4GB) |
+| tortuga | turtle | 🐢 | Legacy benchmarking (8-GPU chassis) |
+
+Machine selection drives the emoji, bash prompt, Plymouth splash, MOTD header, and ASCII art automatically via a built-in lookup table. Custom machine names are also supported.
 
 ## What it does
 
 | Script | Description |
 |--------|-------------|
-| `01-packages.sh` | Installs all tools: tmux, htop, btop, cmatrix, cbonsai, pipes.sh, asciiquarium, toilet, figlet, neofetch, nmon, tty-clock, etc. |
+| `01-packages.sh` | Installs all tools: tmux, htop, btop, cmatrix, cbonsai, pipes.sh, asciiquarium, toilet, figlet, neofetch, nmon, tty-clock, lm-sensors, fancontrol, etc. |
 | `02-nvidia.sh` | Installs NVIDIA drivers (configurable version). Skips if correct version already running. Detects Secure Boot and warns if enabled. |
 | `03-plymouth.sh` | Generates a boot splash PNG from the machine name using toilet/figlet and installs it as a Plymouth theme. Skips if already active. |
-| `04-motd.sh` | Custom MOTD with figlet header, random ASCII art, GPU/CPU/memory/disk/uptime stats. Disables all default Ubuntu MOTD messages. |
+| `04-motd.sh` | Custom MOTD with figlet header, random ASCII art from `ascii-art/<machine>/`, GPU/CPU/memory/disk/uptime stats. Disables all default Ubuntu MOTD messages. |
 | `05-grub.sh` | Sets `quiet splash` in GRUB for Plymouth. |
 | `06-autologin.sh` | Configures systemd autologin on a TTY. |
 | `07-dashboard.sh` | Creates a tmux dashboard script with configurable panes (including multi-command rotation) and hooks it into `.bash_profile` to auto-launch on the autologin TTY. |
-| `08-prompt.sh` | Sets a two-line bash prompt with configurable emoji, machine name, path, and git branch. Uses marker blocks for safe re-runs. |
+| `08-prompt.sh` | Sets a two-line bash prompt with machine emoji, name, path, and git branch. Uses marker blocks for safe re-runs. |
 | `09-harden.sh` | Enables UFW (deny incoming, allow SSH) and fail2ban (systemd backend). |
+| `10-ai-stack.sh` | Installs CUDA 12.4 toolkit, Ollama, Docker (+ NVIDIA Container Toolkit), Node.js LTS, HuggingFace CLI. |
 
-## Quick start
+## Workflows
 
-### Fresh install
+### Fresh Install / Fix Drift
 
-1. Install Ubuntu 22.04 LTS on the target machine.
+Options 1 and 2 on the main menu both run the full install sequence. Since all scripts are idempotent, re-running fixes drift without duplicating or corrupting configs.
 
-2. Copy this folder and your ASCII art folder to the machine:
-   ```bash
-   scp -r machine-setup/ user@host:~/
-   scp -r ant-art/ user@host:~/        # or whatever art folder you use
-   ```
+### Full Reset
 
-3. Edit `config.env` for the new machine:
-   ```bash
-   cd ~/machine-setup
-   nano config.env
-   ```
-   At minimum, change:
-   - `MACHINE_NAME` — used in Plymouth, MOTD header, prompt, dashboard script name
-   - `SETUP_USER` — the user account to configure
-   - `PROMPT_EMOJI` — emoji shown in the bash prompt
-   - `ART_DIR` / `ART_GLOB` — path and glob pattern for ASCII art files
+Option 3 runs `reset.sh` — strips the machine to minimal Ubuntu 22.04 server state:
+- Removes all loco-base artifacts (Plymouth, MOTD, dashboard, prompt, autologin, sudoers, fail2ban)
+- Purges desktop environments and display managers
+- Removes snap and flatpak
+- Disables unnecessary services
+- Never touches: SSH, kernel, networking, sudo, or apt itself
 
-4. Run the installer:
-   ```bash
-   sudo -E bash install.sh
-   ```
+### Post-Install Setup
 
-5. If Secure Boot is enabled, the NVIDIA step will warn you. Disable it in BIOS, reboot, then run:
-   ```bash
-   sudo dpkg --configure -a
-   ```
+Option 4 opens a submenu for optional configuration after the base install:
 
-6. Reboot and verify:
-   ```bash
-   sudo reboot
-   # after reboot:
-   bash ~/machine-setup/verify.sh
-   ```
+| Option | Description |
+|--------|-------------|
+| GitHub & SSH key setup | Authenticates `gh`, generates/uploads SSH key, switches repo to SSH, saves token to `~/.env.keys` |
+| Install Claude Code | Installs Claude Code CLI, optionally saves Anthropic API key to `~/.env.keys` |
+| Configure dashboard | Interactive tool to change panes, layout, and rotation interval |
+| Update MOTD art | Re-copies art from `ascii-art/<machine>/` and regenerates MOTD |
+| Fan curve setup | Runs `sensors-detect` + `pwmconfig` to configure fan curves, enables `fancontrol` service |
 
-7. Remove temporary passwordless sudo:
-   ```bash
-   sudo rm /etc/sudoers.d/<username>-nopasswd
-   ```
+### Run Individual Script
 
-### Drift recovery (re-run install)
+Option 5 lets you re-run any of the 10 setup scripts independently. Useful for targeted fixes (e.g., just re-run NVIDIA setup after disabling Secure Boot, or re-run the AI stack).
 
-If a machine has drifted from the expected state (missing packages, changed configs, students installed things they shouldn't have), just re-run the installer:
+## AI stack
 
-```bash
-sudo -E bash install.sh
+The `10-ai-stack.sh` script installs the ML/AI foundation that all loco-* projects depend on:
+
+| Component | What | Why |
+|-----------|------|-----|
+| **CUDA 12.4** | GPU compute toolkit | Supports compute 5.0+ (GTX 950 through RTX 4050) |
+| **Ollama** | LLM inference engine | Used by loco-llm, loco-bench, loco-ensayo |
+| **Docker** | Container runtime + NVIDIA Container Toolkit | GPU passthrough, service deployment |
+| **Node.js 22 LTS** | JavaScript runtime | Astro Starlight docs sites |
+| **HuggingFace CLI** | Model hub access | Model downloads for loco-bench, loco-llm |
+
+Each component is individually toggleable in `config.env` (e.g., `CUDA_ENABLE=true`).
+
+## ASCII art
+
+Art files live in the repo under `ascii-art/<machine-name>/`:
+
+```
+ascii-art/
+├── cerebro/        # brain art (*.txt)
+├── colmena/        # beehive art (*.txt)
+├── hormiga/        # ant art (*.txt)
+└── tortuga/        # turtle art (*.txt)
 ```
 
-This will:
-- Install any missing packages, skip already-installed ones
-- Reconfigure MOTD, prompt, autologin, dashboard, hardening to match `config.env`
-- Skip expensive operations (NVIDIA driver install, Plymouth initramfs rebuild) if already correct
-- Never duplicate or corrupt existing config (prompt uses marker blocks, `.bash_profile` hook is guarded)
+During install, all `*.txt` files from the machine's folder are copied to `/etc/motd-art/` on the target. The MOTD script picks one at random on each login.
 
-### Full reset (nuke and pave)
-
-If a machine is too far gone (desktop environment installed, snaps everywhere, wrong shell, etc.), reset it first:
-
-```bash
-sudo -E bash reset.sh      # strips to minimal server state
-sudo -E bash install.sh     # re-applies everything cleanly
-```
-
-`reset.sh` will:
-- Require you to type `YES` to confirm
-- Remove all machine-setup artifacts (Plymouth theme, MOTD, dashboard, prompt, autologin, sudoers, fail2ban config)
-- Purge desktop environments and display managers (GNOME, KDE, XFCE, LXDE, LXQt, MATE, Cinnamon)
-- Remove snap and flatpak completely
-- Disable and remove unnecessary services (cups, avahi, bluetooth, modemmanager, apport, cloud-init, etc.)
-- Reset all user shells to bash, remove zsh/fish
-- Remove all packages installed by our scripts
-- Run `autoremove --purge` to clean orphans
-
-It will **never** touch: SSH, kernel, networking, sudo, apt, or systemd itself.
+**To add new art:** Drop `.txt` files into the machine's folder, then either re-run the full install or use Post-Install > Update MOTD art. The old art at `/etc/motd-art/` is replaced entirely with what's in the repo folder.
 
 ## Python development setup (optional)
 
@@ -128,48 +146,52 @@ uvenv rm <name>                     # remove a global environment
 uvenv help                          # show help
 ```
 
-Global environments live in `~/.uv-envs/` (configurable via `UV_ENV_HOME`). The `base` environment auto-activates on login.
-
-**Two modes, one tool**: Use `uv` directly for project-local work (pyproject.toml, .venv per project). Use `uvenv` for shared/global environments (data science, teaching, etc.). `uvenv use` checks for a local `.venv` first, so they coexist naturally.
-
-Everything stays in the user's home directory — no system Python is touched.
-
 ## Toggle scripts
-
-Convenience scripts for toggling settings on and off:
 
 | Script | Description |
 |--------|-------------|
 | `toggle-autologin.sh` | Enable/disable TTY autologin. Usage: `sudo ./toggle-autologin.sh on\|off\|status` |
 | `toggle-nopasswd.sh` | Enable/disable NOPASSWD sudo. Usage: `sudo ./toggle-nopasswd.sh on\|off\|status` |
 
-## Configuration reference
+## Configuration
 
-All settings live in `config.env`:
+Settings live in `config.env`. Machine identity (name + emoji) is set by the install menu and saved in `.machine` — you don't need to edit these manually.
 
 ```
-MACHINE_NAME            Name used everywhere (Plymouth, MOTD, prompt)
-SETUP_USER              Linux user to configure
-PROMPT_EMOJI            Emoji in bash prompt (renders on SSH clients, not framebuffer TTY)
 PROMPT_COLOR            ANSI color code for prompt (default: 1;36m = cyan)
-ART_DIR                 Absolute path to folder with ASCII art files
-ART_GLOB                Glob pattern for art files (e.g. "ant-*.txt", "brain-*.txt")
 PLYMOUTH_ENABLE         true/false
 PLYMOUTH_FONT           figlet/toilet font name (default: future)
 PLYMOUTH_FG_COLOR       ImageMagick color for splash text (default: cyan)
 NVIDIA_ENABLE           true/false
 NVIDIA_DRIVER_VERSION   Driver version (default: 535)
+CUDA_ENABLE             true/false (default: true)
+CUDA_VERSION            CUDA version (default: 12-4)
+OLLAMA_ENABLE           true/false (default: true)
+DOCKER_ENABLE           true/false (default: true)
+NODEJS_ENABLE           true/false (default: true)
+NODEJS_VERSION          Node.js major version (default: 22)
+HF_CLI_ENABLE           true/false (default: true)
 AUTOLOGIN_ENABLE        true/false
 AUTOLOGIN_TTY           Which TTY (default: tty1)
 DASHBOARD_ENABLE        true/false
 DASHBOARD_LAYOUT        tmux layout: tiled, even-horizontal, even-vertical, main-horizontal, main-vertical
-DASHBOARD_ROTATE_INTERVAL  Default rotation interval in seconds for multi-command panes (default: 300)
-DASHBOARD_PANE_1-8      Commands for each pane — use | to rotate multiple commands (set to "" to disable)
-DASHBOARD_PANE_N_INTERVAL  Per-pane rotation interval override (optional)
+DASHBOARD_ROTATE_INTERVAL  Default rotation interval in seconds (default: 300)
+DASHBOARD_PANE_1-8      Commands for each pane — use | to rotate multiple (set to "" to disable)
 UFW_ENABLE              true/false
 FAIL2BAN_ENABLE         true/false
 EXTRA_PACKAGES          Additional apt packages (space-separated)
 ```
+
+## API keys and tokens
+
+Post-install scripts save credentials to `~/.env.keys` (chmod 600), which is auto-sourced from `.bashrc`:
+
+```bash
+export GITHUB_TOKEN="ghp_..."
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+This file is never committed to the repo.
 
 ## Dashboard pane options
 
@@ -198,20 +220,28 @@ Some good pane commands:
 | `neofetch --loop` | System info on repeat |
 | `watch -n2 -c nvidia-smi` | Live GPU stats |
 
+Use Post-Install > Configure dashboard to reconfigure panes interactively after install.
+
 ## File structure
 
 ```
-machine-setup/
-├── config.env              # Per-machine configuration
-├── install.sh              # Main installer (run with sudo -E)
+loco-base/
+├── config.env              # Configurable defaults (dashboard, NVIDIA, AI stack, hardening, etc.)
+├── install.sh              # Menu-driven installer (run with sudo -E)
 ├── reset.sh                # Strip to minimal server state
+├── verify.sh               # Post-install verification
 ├── setup-python.sh         # Python dev environment (optional, no root needed)
 ├── uv-functions.bash       # Conda-style shell functions for uv
-├── verify.sh               # Post-install verification
 ├── toggle-autologin.sh     # Toggle TTY autologin on/off
 ├── toggle-nopasswd.sh      # Toggle NOPASSWD sudo on/off
 ├── README.md
-├── HARDENING.md           # Security posture documentation
+├── HARDENING.md            # Security posture documentation
+├── .machine                # Machine identity (auto-generated, gitignored)
+├── ascii-art/              # Per-machine ASCII art
+│   ├── cerebro/
+│   ├── colmena/
+│   ├── hormiga/
+│   └── tortuga/
 ├── scripts/
 │   ├── 01-packages.sh
 │   ├── 02-nvidia.sh
@@ -222,7 +252,14 @@ machine-setup/
 │   ├── 07-dashboard.sh
 │   ├── 08-prompt.sh
 │   ├── 09-harden.sh
+│   ├── 10-ai-stack.sh      # CUDA + Ollama + Docker + Node.js + HF CLI
 │   └── pane-runner.sh      # Helper for dashboard pane rotation
+├── post-install/
+│   ├── github-ssh.sh       # GitHub auth + SSH key setup
+│   ├── claude-code.sh      # Install Claude Code CLI
+│   ├── configure-dashboard.sh  # Interactive dashboard reconfiguration
+│   ├── update-motd-art.sh  # Re-copy art and regenerate MOTD
+│   └── fan-setup.sh        # Fan curve configuration (lm-sensors + fancontrol)
 └── security/
     ├── audit-local.sh       # Local security audit + drift detection
     ├── audit-remote.sh      # Remote nmap port scanning
@@ -249,6 +286,6 @@ See [HARDENING.md](HARDENING.md) for a full write-up of the security posture.
 
 - The prompt emoji renders correctly over SSH (your terminal handles it) but will show as a diamond on the physical framebuffer TTY. This is expected — SSH is the primary access method.
 - The installer creates a temporary NOPASSWD sudo entry. Always remove it as the final step.
-- Individual scripts can be re-run independently by sourcing `config.env` first.
-- The dashboard script is installed to `~/<machine-name>-dashboard.sh` and can be edited directly after install to change panes or layout without re-running the installer.
+- Individual scripts can be re-run from the menu (option 5) or independently after sourcing `config.env`.
+- The dashboard script is installed to `~/<machine-name>-dashboard.sh` and can be edited directly, or reconfigured via Post-Install > Configure dashboard.
 - `reset.sh` only supports Ubuntu 22.04 LTS. It will refuse to run on other versions.

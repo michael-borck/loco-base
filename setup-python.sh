@@ -80,8 +80,8 @@ export UV_ENV_HOME
 source "$UV_FUNCTIONS_DEST"
 
 # Add to .bashrc if not already present (marker-based)
-MARKER_START="# >>> machine-setup uv-functions >>>"
-MARKER_END="# <<< machine-setup uv-functions <<<"
+MARKER_START="# >>> loco-base uv-functions >>>"
+MARKER_END="# <<< loco-base uv-functions <<<"
 
 if grep -q "$MARKER_START" "$BASHRC" 2>/dev/null; then
     sed -i "/${MARKER_START}/,/${MARKER_END}/d" "$BASHRC"
@@ -193,8 +193,8 @@ deactivate
 # ── Step 6: Auto-activate base environment ──
 step "Configure auto-activation"
 
-ACTIVATE_MARKER_START="# >>> machine-setup uv-activate >>>"
-ACTIVATE_MARKER_END="# <<< machine-setup uv-activate <<<"
+ACTIVATE_MARKER_START="# >>> loco-base uv-activate >>>"
+ACTIVATE_MARKER_END="# <<< loco-base uv-activate <<<"
 
 if grep -q "$ACTIVATE_MARKER_START" "$BASHRC" 2>/dev/null; then
     sed -i "/${ACTIVATE_MARKER_START}/,/${ACTIVATE_MARKER_END}/d" "$BASHRC"

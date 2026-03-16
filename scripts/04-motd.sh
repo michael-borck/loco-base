@@ -1,20 +1,48 @@
 #!/bin/bash
 # Install custom MOTD
+# Art is copied from ascii-art/<machine>/ in the repo to /etc/motd-art/
 source "$(dirname "$0")/../config.env"
 
-G='\033[1;32m'; R='\033[0m'
-ok() { echo -e "  ${G}✓${R} $1"; }
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+G='\033[1;32m'; Y='\033[1;33m'; R='\033[0m'
+ok()   { echo -e "  ${G}✓${R} $1"; }
+warn() { echo -e "  ${Y}!${R} $1"; }
 
 USER_HOME=$(eval echo "~$SETUP_USER")
 HEADER_TEXT=$(echo "$MACHINE_NAME" | tr '[:lower:]' '[:upper:]')
 
-# Disable default MOTD scripts
+ART_SRC="$SCRIPT_DIR/ascii-art/${MACHINE_NAME,,}"
+ART_DEST="/etc/motd-art"
+
+# ── Copy art from repo ──
+if [ -d "$ART_SRC" ]; then
+    ART_COUNT=$(find "$ART_SRC" -maxdepth 1 -name '*.txt' -type f 2>/dev/null | wc -l)
+    if [ "$ART_COUNT" -gt 0 ]; then
+        rm -rf "$ART_DEST"
+        mkdir -p "$ART_DEST"
+        cp "$ART_SRC"/*.txt "$ART_DEST/"
+        chmod 644 "$ART_DEST"/*.txt
+        ok "Copied ${ART_COUNT} art files to ${ART_DEST}"
+    else
+        warn "Art folder empty: ${ART_SRC} — MOTD will have no art"
+    fi
+else
+    warn "No art folder: ${ART_SRC} — MOTD will have no art"
+fi
+
+# ── Disable default MOTD scripts ──
 for f in /etc/update-motd.d/{00-header,10-help-text,50-motd-news,60-unminimize,85-fwupd,91-release-upgrade,92-unattended-upgrades,99-livepatch-kernel-upgrade-required}; do
     [ -f "$f" ] && chmod -x "$f"
 done
 ok "Disabled default MOTD scripts"
 
-# Generate MOTD script from template
+# ── Remove any previous custom MOTD scripts from loco-base ──
+for f in /etc/update-motd.d/01-*; do
+    [ -f "$f" ] && rm -f "$f"
+done
+
+# ── Generate MOTD script from template ──
 MOTD_SCRIPT="/etc/update-motd.d/01-${MACHINE_NAME,,}"
 
 cat > "$MOTD_SCRIPT" <<'OUTER'
@@ -26,12 +54,13 @@ DIM='\033[2m'
 RESET='\033[0m'
 
 ART_DIR="__ART_DIR__"
-ART_GLOB="__ART_GLOB__"
 HEADER="__HEADER__"
 
 # Pick random art file
-ART_FILES=("$ART_DIR"/$ART_GLOB)
-ART_FILE="${ART_FILES[RANDOM % ${#ART_FILES[@]}]}"
+ART_FILES=("$ART_DIR"/*.txt)
+if [ -f "${ART_FILES[0]}" ]; then
+    ART_FILE="${ART_FILES[RANDOM % ${#ART_FILES[@]}]}"
+fi
 
 # Header
 echo ""
@@ -49,7 +78,7 @@ fi
 echo ""
 
 # ASCII art
-if [ -f "$ART_FILE" ]; then
+if [ -n "$ART_FILE" ] && [ -f "$ART_FILE" ]; then
     while IFS= read -r line; do
         echo -e "${CYAN}  ${line}${RESET}"
     done < "$ART_FILE"
@@ -102,8 +131,7 @@ echo ""
 OUTER
 
 # Replace placeholders
-sed -i "s|__ART_DIR__|${ART_DIR}|g" "$MOTD_SCRIPT"
-sed -i "s|__ART_GLOB__|${ART_GLOB}|g" "$MOTD_SCRIPT"
+sed -i "s|__ART_DIR__|${ART_DEST}|g" "$MOTD_SCRIPT"
 sed -i "s|__HEADER__|${HEADER_TEXT}|g" "$MOTD_SCRIPT"
 
 chmod 755 "$MOTD_SCRIPT"

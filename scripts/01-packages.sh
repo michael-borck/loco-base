@@ -41,6 +41,8 @@ APT_PACKAGES=(
     imagemagick
     lynis
     nmap
+    lm-sensors
+    fancontrol
 )
 
 # Plymouth
