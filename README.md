@@ -33,9 +33,12 @@ bash ~/loco-base/verify.sh
 
 | Machine | Name (Spanish) | Emoji | Role |
 |---------|---------------|-------|------|
+| burro | donkey | 🫏 | Retired (art retained) |
 | cerebro | brain | 🧠 | Education platform (RTX 2060 Super 8GB) |
 | colmena | beehive | 🐝 | Benchmarking + multi-GPU + fine-tuning (8-GPU chassis) |
 | hormiga | ant | 🐜 | Reference floor node (GTX 1050 Ti 4GB) |
+| mesa | table | 🪑 | Staging node art (legacy name) |
+| pulpo | octopus | 🐙 | Overflow, GPU onboarding/testing (RTX 3060 12GB) |
 | tortuga | turtle | 🐢 | Legacy benchmarking (8-GPU chassis) |
 
 Machine selection drives the emoji, bash prompt, Plymouth splash, MOTD header, and ASCII art automatically via a built-in lookup table. Custom machine names are also supported.
@@ -106,9 +109,12 @@ Art files live in the repo under `ascii-art/<machine-name>/`:
 
 ```
 ascii-art/
+├── burro/          # donkey art (*.txt)
 ├── cerebro/        # brain art (*.txt)
 ├── colmena/        # beehive art (*.txt)
 ├── hormiga/        # ant art (*.txt)
+├── mesa/           # table art (*.txt)
+├── pulpo/          # octopus art (*.txt)
 └── tortuga/        # turtle art (*.txt)
 ```
 
@@ -238,9 +244,12 @@ loco-base/
 ├── HARDENING.md            # Security posture documentation
 ├── .machine                # Machine identity (auto-generated, gitignored)
 ├── ascii-art/              # Per-machine ASCII art
+│   ├── burro/
 │   ├── cerebro/
 │   ├── colmena/
 │   ├── hormiga/
+│   ├── mesa/
+│   ├── pulpo/
 │   └── tortuga/
 ├── scripts/
 │   ├── 01-packages.sh
