@@ -30,7 +30,7 @@ fi
 export SCRIPT_DIR
 
 # ── Machine Lookup Table ──
-KNOWN_MACHINES=(burro cerebro colmena hormiga mesa pulpo tortuga)
+KNOWN_MACHINES=(burro cerebro colmena hormiga mesa puente pulpo tortuga)
 
 declare -A MACHINE_EMOJI_MAP=(
     [burro]="🫏"
@@ -38,6 +38,7 @@ declare -A MACHINE_EMOJI_MAP=(
     [colmena]="🐝"
     [hormiga]="🐜"
     [mesa]="🪑"
+    [puente]="🌉"
     [pulpo]="🐙"
     [tortuga]="🐢"
 )
@@ -48,6 +49,7 @@ declare -A MACHINE_LABEL=(
     [colmena]="colmena (beehive)"
     [hormiga]="hormiga (ant)"
     [mesa]="mesa (table)"
+    [puente]="puente (bridge)"
     [pulpo]="pulpo (octopus)"
     [tortuga]="tortuga (turtle)"
 )
@@ -193,6 +195,122 @@ run_reset() {
 }
 
 # ══════════════════════════════════════════════
+# Workflow: Rename Machine
+# ══════════════════════════════════════════════
+run_rename() {
+    local OLD_NAME="${MACHINE_NAME,,}"
+    USER_HOME=$(eval echo "~$SETUP_USER")
+
+    echo -e "\n${C}══════════════════════════════════════════════${R}"
+    echo -e "${C}  Rename Machine${R}"
+    echo -e "${C}══════════════════════════════════════════════${R}"
+    echo ""
+    echo -e "  Current name: ${G}${OLD_NAME}${R} ${PROMPT_EMOJI}"
+    echo ""
+    echo -e "  This will:"
+    echo -e "    1. Remove name-specific files for '${OLD_NAME}'"
+    echo -e "    2. Prompt for a new machine name"
+    echo -e "    3. Re-run config scripts (plymouth, motd, grub, etc.)"
+    echo ""
+    echo -e "  ${G}Safe:${R} Does NOT touch packages, services, Docker, or running workloads."
+    echo ""
+
+    read -rp "  Proceed? [y/N]: " confirm
+    if [[ ! "$confirm" =~ ^[Yy] ]]; then
+        echo "  Aborted."
+        return
+    fi
+
+    # ── Remove old name-specific artifacts ──
+    step "Removing old artifacts for '${OLD_NAME}'"
+
+    # Plymouth theme directory
+    if [ -d "/usr/share/plymouth/themes/${OLD_NAME}" ]; then
+        update-alternatives --remove default.plymouth \
+            "/usr/share/plymouth/themes/${OLD_NAME}/${OLD_NAME}.plymouth" 2>/dev/null || true
+        rm -rf "/usr/share/plymouth/themes/${OLD_NAME}"
+        ok "Removed Plymouth theme '${OLD_NAME}'"
+    else
+        skip "Plymouth theme"
+    fi
+
+    # MOTD script
+    if [ -f "/etc/update-motd.d/01-${OLD_NAME}" ]; then
+        rm -f "/etc/update-motd.d/01-${OLD_NAME}"
+        ok "Removed /etc/update-motd.d/01-${OLD_NAME}"
+    else
+        skip "MOTD script"
+    fi
+
+    # Dashboard script
+    if [ -f "${USER_HOME}/${OLD_NAME}-dashboard.sh" ]; then
+        rm -f "${USER_HOME}/${OLD_NAME}-dashboard.sh"
+        ok "Removed ${OLD_NAME}-dashboard.sh"
+    else
+        skip "Dashboard script"
+    fi
+
+    # Dashboard hook in .bash_profile
+    if [ -f "${USER_HOME}/.bash_profile" ] && grep -q "Auto-start ${OLD_NAME} dashboard" "${USER_HOME}/.bash_profile"; then
+        sed -i "/# Auto-start ${OLD_NAME} dashboard/,/^fi$/d" "${USER_HOME}/.bash_profile"
+        sed -i '/^$/N;/^\n$/d' "${USER_HOME}/.bash_profile"
+        ok "Removed dashboard hook from .bash_profile"
+    else
+        skip "Dashboard hook"
+    fi
+
+    # ── Select new machine name ──
+    select_machine
+
+    # ── Re-run config scripts with new name ──
+    export MACHINE_NAME SETUP_USER PROMPT_EMOJI
+
+    step "Plymouth boot splash"
+    if [ "$PLYMOUTH_ENABLE" = true ]; then
+        bash "$SCRIPT_DIR/scripts/03-plymouth.sh"
+    else
+        skip "Plymouth"
+    fi
+
+    step "MOTD"
+    if [ "$MOTD_ENABLE" = true ]; then
+        bash "$SCRIPT_DIR/scripts/04-motd.sh"
+    else
+        skip "MOTD"
+    fi
+
+    step "GRUB splash config"
+    bash "$SCRIPT_DIR/scripts/05-grub.sh"
+
+    step "Autologin"
+    if [ "$AUTOLOGIN_ENABLE" = true ]; then
+        bash "$SCRIPT_DIR/scripts/06-autologin.sh"
+    else
+        skip "Autologin"
+    fi
+
+    step "tmux dashboard"
+    if [ "$DASHBOARD_ENABLE" = true ]; then
+        bash "$SCRIPT_DIR/scripts/07-dashboard.sh"
+    else
+        skip "Dashboard"
+    fi
+
+    step "Bash prompt"
+    bash "$SCRIPT_DIR/scripts/08-prompt.sh"
+
+    step "Hardening"
+    bash "$SCRIPT_DIR/scripts/09-harden.sh"
+
+    step "RENAME COMPLETE"
+    echo ""
+    echo "  Renamed: ${OLD_NAME} → ${MACHINE_NAME} ${PROMPT_EMOJI}"
+    echo ""
+    echo "  Reboot to verify Plymouth + MOTD + dashboard."
+    echo ""
+}
+
+# ══════════════════════════════════════════════
 # Workflow: Run Individual Script
 # ══════════════════════════════════════════════
 run_individual() {
@@ -286,15 +404,17 @@ show_main_menu() {
     echo -e "  ${G}3)${R} Full Reset"
     echo -e "  ${G}4)${R} Post-Install Setup"
     echo -e "  ${G}5)${R} Run Individual Script"
+    echo -e "  ${G}6)${R} Rename Machine"
     echo ""
 
-    read -rp "  Select [1-5]: " workflow
+    read -rp "  Select [1-6]: " workflow
     case "$workflow" in
         1) run_install ;;
         2) run_install ;;
         3) run_reset ;;
         4) run_post_install ;;
         5) run_individual ;;
+        6) run_rename ;;
         *) echo "  Invalid selection."; exit 1 ;;
     esac
 }
