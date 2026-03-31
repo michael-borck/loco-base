@@ -38,7 +38,7 @@ declare -A MACHINE_EMOJI_MAP=(
     [colmena]="🐝"
     [hormiga]="🐜"
     [mesa]="🪑"
-    [puente]="🌉"
+    [puente]="⛩️"
     [pulpo]="🐙"
     [tortuga]="🐢"
 )
