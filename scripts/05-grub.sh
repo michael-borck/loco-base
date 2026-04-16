@@ -1,14 +1,22 @@
 #!/bin/bash
-# Configure GRUB for Plymouth splash
+# Configure GRUB boot parameters
+source "$(dirname "$0")/../config.env"
+
 G='\033[1;32m'; R='\033[0m'
 ok() { echo -e "  ${G}✓${R} $1"; }
 
-CURRENT=$(grep '^GRUB_CMDLINE_LINUX_DEFAULT=' /etc/default/grub)
+# Build desired cmdline from config
+CMDLINE="quiet splash"
+if [ "${NVIDIA_OLD_BIOS_QUIRKS:-false}" = true ]; then
+    CMDLINE="$CMDLINE intel_iommu=off pcie_aspm=off pci=realloc=off pci=nocrs"
+fi
 
-if echo "$CURRENT" | grep -q 'quiet splash'; then
-    ok "GRUB already has 'quiet splash'"
+CURRENT=$(grep '^GRUB_CMDLINE_LINUX_DEFAULT=' /etc/default/grub | sed 's/^GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"/\1/')
+
+if [ "$CURRENT" = "$CMDLINE" ]; then
+    ok "GRUB already configured correctly"
 else
-    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"/' /etc/default/grub
+    sed -i "s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"${CMDLINE}\"|" /etc/default/grub
     update-grub
-    ok "GRUB configured with 'quiet splash'"
+    ok "GRUB configured: ${CMDLINE}"
 fi

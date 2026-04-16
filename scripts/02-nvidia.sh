@@ -29,8 +29,8 @@ if mokutil --sb-state 2>/dev/null | grep -qi "enabled"; then
     warn "Secure Boot is ENABLED — NVIDIA DKMS will fail"
     warn "Disable Secure Boot in BIOS, then re-run: sudo dpkg --configure -a"
 else
-    # Configure any pending packages
-    dpkg --configure -a 2>&1 | tail -5
+    # Configure any pending packages (--force-confnew accepts updated config files non-interactively)
+    DEBIAN_FRONTEND=noninteractive dpkg --force-confnew --configure -a 2>&1 | tail -5
     apt-get install -f -y 2>&1 | tail -1
     ok "NVIDIA ${VER} drivers installed"
 fi

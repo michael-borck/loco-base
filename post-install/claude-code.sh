@@ -70,6 +70,14 @@ else
     warn "Skipped API key. You can log in interactively with: claude"
 fi
 
+# Ensure .claude config dir is owned by the user, not root
+# (can end up root-owned if install ran with sudo context or claude was first
+# initialised as root)
+if [ -d "${USER_HOME}/.claude" ]; then
+    chown -R "${SETUP_USER}:${SETUP_USER}" "${USER_HOME}/.claude"
+    ok ".claude ownership set to ${SETUP_USER}"
+fi
+
 echo ""
 echo "  Claude Code ready. Start with:"
 echo "    claude"
