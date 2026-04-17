@@ -30,12 +30,14 @@ fi
 export SCRIPT_DIR
 
 # ── Machine Lookup Table ──
-KNOWN_MACHINES=(burro cerebro colmena hormiga mesa puente pulpo tortuga)
+KNOWN_MACHINES=(burro cerebro colmena condor hidra hormiga mesa puente pulpo tortuga)
 
 declare -A MACHINE_EMOJI_MAP=(
     [burro]="🫏"
     [cerebro]="🧠"
     [colmena]="🐝"
+    [condor]="🦅"
+    [hidra]="🐉"
     [hormiga]="🐜"
     [mesa]="🪑"
     [puente]="⛩️"
@@ -47,6 +49,8 @@ declare -A MACHINE_LABEL=(
     [burro]="burro (donkey)"
     [cerebro]="cerebro (brain)"
     [colmena]="colmena (beehive)"
+    [condor]="condor (condor)"
+    [hidra]="hidra (hydra)"
     [hormiga]="hormiga (ant)"
     [mesa]="mesa (table)"
     [puente]="puente (bridge)"

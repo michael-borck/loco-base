@@ -33,15 +33,14 @@ bash ~/loco-base/verify.sh
 
 | Machine | Name (Spanish) | Emoji | Role |
 |---------|---------------|-------|------|
-| burro | donkey | 🫏 | Retired (art retained) |
-| cerebro | brain | 🧠 | Education platform (RTX 2060 Super 8GB) |
-| colmena | beehive | 🐝 | Benchmarking + multi-GPU + fine-tuning (8-GPU chassis) |
+| colmena | beehive | 🐝 | RTX-era LocoBench benchmarking (WEIHO 8-GPU chassis) |
+| condor | condor | 🦅 | Dedicated AI inference + LocoLLM adapter training (X99 single Xeon, 32GB RAM, V100 32GB) |
+| hidra | hydra | 🐉 | Multi-GPU experiments + GPU onboarding (X99 dual Xeon, 4x PCIe x16, open frame) |
 | hormiga | ant | 🐜 | Reference floor node (GTX 1050 Ti 4GB) |
-| mesa | table | 🪑 | Staging node art (legacy name) |
-| pulpo | octopus | 🐙 | Overflow, GPU onboarding/testing (RTX 3060 12GB) |
-| tortuga | turtle | 🐢 | Legacy benchmarking (8-GPU chassis) |
+| puente | bridge | ⛩️ | LocoPuente PoC + LocoEnsayo chatbots (Ryzen 5 2600, RTX 3090 24GB -- single card) |
+| tortuga | turtle | 🐢 | Legacy pre-RTX LocoBench benchmarking (8-GPU chassis) |
 
-Machine selection drives the emoji, bash prompt, Plymouth splash, MOTD header, and ASCII art automatically via a built-in lookup table. Custom machine names are also supported.
+Machine selection drives the emoji, bash prompt, Plymouth splash, MOTD header, and ASCII art automatically via a built-in lookup table. Custom machine names are also supported, and additional ASCII-art folders ship in the repo for flexibility.
 
 ## What it does
 
@@ -112,6 +111,8 @@ ascii-art/
 ├── burro/          # donkey art (*.txt)
 ├── cerebro/        # brain art (*.txt)
 ├── colmena/        # beehive art (*.txt)
+├── condor/         # condor art (*.txt)
+├── hidra/          # hydra art (*.txt)
 ├── hormiga/        # ant art (*.txt)
 ├── mesa/           # table art (*.txt)
 ├── pulpo/          # octopus art (*.txt)
@@ -247,6 +248,8 @@ loco-base/
 │   ├── burro/
 │   ├── cerebro/
 │   ├── colmena/
+│   ├── condor/
+│   ├── hidra/
 │   ├── hormiga/
 │   ├── mesa/
 │   ├── pulpo/
