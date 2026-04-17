@@ -35,7 +35,7 @@ bash ~/loco-base/verify.sh
 |---------|---------------|-------|------|
 | colmena | beehive | 🐝 | RTX-era LocoBench benchmarking (WEIHO 8-GPU chassis) |
 | condor | condor | 🦅 | Dedicated AI inference + LocoLLM adapter training (X99 single Xeon, 32GB RAM, V100 32GB) |
-| hidra | hydra | 🐉 | Multi-GPU experiments + GPU onboarding (X99 dual Xeon, 4x PCIe x16, open frame) |
+| hidra | hydra | 🐉 | Multi-GPU experiments + server GPU benchmarking + GPU onboarding (X99 dual Xeon, 4x PCIe x16, open frame; V100 16GB + P100, M40 + P40 incoming) |
 | hormiga | ant | 🐜 | Reference floor node (GTX 1050 Ti 4GB) |
 | puente | bridge | ⛩️ | LocoPuente PoC + LocoEnsayo chatbots (Ryzen 5 2600, RTX 3090 24GB -- single card) |
 | tortuga | turtle | 🐢 | Legacy pre-RTX LocoBench benchmarking (8-GPU chassis) |
